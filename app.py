@@ -1,8 +1,10 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Importaciones Boreal Medical", layout="centered")
+# 1. Configuración de la página
+st.set_page_config(page_title="Importaciones Boreal Medical", page_icon="LOGO_BOREAL_MEDICAL_HORIZONTAL.png", layout="centered")
 
+# 2. Variables de memoria
 if "autenticado" not in st.session_state:
     st.session_state["autenticado"] = False
 
@@ -13,7 +15,6 @@ def limpiar_busqueda():
     st.session_state["busqueda_proveedor"] = ""
 
 def cuadro_titulo(texto):
-    # Utilizamos nombres explícitos de color como lightgray y black
     return f"""
     <div style='background-color: lightgray; padding: 5px 10px; border-radius: 5px; 
                 font-weight: bold; color: black; margin-bottom: 5px;'>
@@ -21,27 +22,27 @@ def cuadro_titulo(texto):
     </div>
     """
 
+# 3. Función para cargar la base de datos desde Google Sheets
 def cargar_datos():
     columnas_requeridas = ['PO', 'SUPPLIER', 'PRODUCTOS', 'STATUS', 'ARRIBO', 'WR', 'NOTES']
-    # La aplicación ahora lee directamente desde tu servidor en vivo
-    url_excel = "https://docs.google.com/spreadsheets/d/1sTUGAEUiVt-J1UIxjlMOSQ6PEbPh_Phff3Q4Vidv8zs/edit?usp=drive_link"
     
-    df = pd.read_excel(
-        url_excel, 
-        sheet_name="2026", 
+    # Enlace modificado para exportar la pestaña exacta (gid=1010252446) como CSV
+    url_google_sheets = "https://docs.google.com/spreadsheets/d/1sTUGAEUiVt-J1UIxjlMOSQ6PEbPh_Phff3Q4Vidv8zs/export?format=csv&gid=1010252446"
+    
+    # Usamos read_csv en lugar de read_excel
+    df = pd.read_csv(
+        url_google_sheets, 
         usecols=columnas_requeridas,
         dtype=str
     )
     return df
 
-# URL del logotipo alojado en tu servidor
-url_logo = "https://equipomedico.com.ec/app_importaciones/LOGO_BOREAL_MEDICAL_HORIZONTAL.png"
-
+# 4. Diseño de la Pantalla de Login
 def mostrar_login():
     try:
-        st.image(url_logo, use_container_width=True)
-    except Exception:
-        st.warning("⚠️ No se pudo cargar el logotipo. Verifica que esté en tu cPanel.")
+        st.image("LOGO_BOREAL_MEDICAL_HORIZONTAL.png", use_container_width=True)
+    except FileNotFoundError:
+        st.warning("⚠️ No se encontró la imagen 'LOGO_BOREAL_MEDICAL_HORIZONTAL.png'.")
     
     st.markdown("---")
     st.markdown("<h3 style='text-align: center;'>Acceso al Sistema de Rastreo</h3>", unsafe_allow_html=True)
@@ -57,6 +58,7 @@ def mostrar_login():
         else:
             st.error("❌ Usuario o contraseña incorrectos.")
 
+# 5. Diseño de la Aplicación Principal
 def mostrar_aplicacion():
     col_espacio, col_salir = st.columns([8, 2])
     with col_salir:
@@ -67,7 +69,7 @@ def mostrar_aplicacion():
     col_logo, col_titulo = st.columns([1, 4])
     with col_logo:
         try:
-            st.image(url_logo, use_container_width=True)
+            st.image("LOGO_BOREAL_MEDICAL_HORIZONTAL.png", use_container_width=True)
         except:
             pass 
             
@@ -96,6 +98,7 @@ def mostrar_aplicacion():
                 st.write("")
                 
                 for index, datos in resultado.iterrows():
+                    
                     po = datos['PO'] if pd.notna(datos['PO']) else "No registrado"
                     supplier = datos['SUPPLIER'] if pd.notna(datos['SUPPLIER']) else "No registrado"
                     productos = datos['PRODUCTOS'] if pd.notna(datos['PRODUCTOS']) else "No registrado"
@@ -113,30 +116,37 @@ def mostrar_aplicacion():
 
                     with st.container(border=True):
                         st.subheader(f"📦 PO: {po}")
+                        
                         col1, col2 = st.columns(2)
                         
                         with col1:
                             st.markdown(cuadro_titulo("SUPPLIER"), unsafe_allow_html=True)
                             st.write(supplier)
+                            
                             st.markdown(cuadro_titulo("PRODUCTOS"), unsafe_allow_html=True)
                             st.write(productos)
+                            
                             st.markdown(cuadro_titulo("ARRIBO"), unsafe_allow_html=True)
                             st.write(arribo)
                             
                         with col2:
                             st.markdown(cuadro_titulo("STATUS"), unsafe_allow_html=True)
                             st.success(f"**{status}**") 
+                            
                             st.markdown(cuadro_titulo("WR"), unsafe_allow_html=True)
                             st.write(wr)
+                            
                             st.markdown(cuadro_titulo("NOTES"), unsafe_allow_html=True)
                             st.info(notes)
+
             else:
                 st.error("❌ No se encontraron órdenes para este proveedor.")
                 st.button("🔄 Intentar nueva búsqueda", on_click=limpiar_busqueda)
 
     except Exception as e:
-        st.error("⚠️ Error de conexión. Revisa que el Excel esté subido correctamente en cPanel.")
+        st.error(f"⚠️ Error al conectar con Google Sheets. Asegúrate de que el documento esté configurado como público. Error: {e}")
 
+# 6. Lógica de control
 if not st.session_state["autenticado"]:
     mostrar_login()
 else:
