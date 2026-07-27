@@ -1,8 +1,11 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuración de la página
-st.set_page_config(page_title="Importaciones Boreal Medical", page_icon="LOGO_BOREAL_MEDICAL_HORIZONTAL.png", layout="centered")
+# 1. Configuración de la página (Uso de emoji para evitar errores de icono en la nube)
+st.set_page_config(page_title="Importaciones Boreal Medical", page_icon="🏢", layout="centered")
+
+# URL DIRECTA DEL LOGOTIPO EN TU SERVIDOR (Esto soluciona el error de MediaFileStorage)
+url_logo = "https://www.equipomedico.com.ec/app_importaciones/LOGO_BOREAL_MEDICAL_HORIZONTAL.png"
 
 # 2. Variables de memoria
 if "autenticado" not in st.session_state:
@@ -25,11 +28,8 @@ def cuadro_titulo(texto):
 # 3. Función para cargar la base de datos desde Google Sheets
 def cargar_datos():
     columnas_requeridas = ['PO', 'SUPPLIER', 'PRODUCTOS', 'STATUS', 'ARRIBO', 'WR', 'NOTES']
-    
-    # Enlace modificado para exportar la pestaña exacta (gid=1010252446) como CSV
     url_google_sheets = "https://docs.google.com/spreadsheets/d/1sTUGAEUiVt-J1UIxjlMOSQ6PEbPh_Phff3Q4Vidv8zs/export?format=csv&gid=1010252446"
     
-    # Usamos read_csv en lugar de read_excel
     df = pd.read_csv(
         url_google_sheets, 
         usecols=columnas_requeridas,
@@ -40,9 +40,10 @@ def cargar_datos():
 # 4. Diseño de la Pantalla de Login
 def mostrar_login():
     try:
-        st.image("https://www.equipomedico.com.ec/app_importaciones/LOGO_BOREAL_MEDICAL_HORIZONTAL.png", use_container_width=True)
-    except FileNotFoundError:
-        st.warning("⚠️ No se encontró la imagen 'LOGO_BOREAL_MEDICAL_HORIZONTAL.png'.")
+        # Llama a la imagen desde internet
+        st.image(url_logo, use_container_width=True)
+    except Exception:
+        st.warning("⚠️ No se pudo cargar el logotipo desde el servidor.")
     
     st.markdown("---")
     st.markdown("<h3 style='text-align: center;'>Acceso al Sistema de Rastreo</h3>", unsafe_allow_html=True)
@@ -69,7 +70,7 @@ def mostrar_aplicacion():
     col_logo, col_titulo = st.columns([1, 4])
     with col_logo:
         try:
-            st.image("LOGO_BOREAL_MEDICAL_HORIZONTAL.png", use_container_width=True)
+            st.image(url_logo, use_container_width=True)
         except:
             pass 
             
@@ -89,55 +90,72 @@ def mostrar_aplicacion():
         termino = st.session_state["busqueda_proveedor"].strip()
 
         if termino:
-            filtro = df['SUPPLIER'].astype(str).str.contains(termino, case=False, na=False)
-            resultado = df[filtro]
+            # Filtrar primero por proveedor
+            filtro_proveedor = df['SUPPLIER'].astype(str).str.contains(termino, case=False, na=False)
+            resultado = df[filtro_proveedor]
 
             if not resultado.empty:
-                st.success(f"✅ Se encontraron {len(resultado)} registros para el proveedor buscado.")
+                
+                # --- NUEVO: FILTRO POR STATUS ---
+                # Extraemos los estatus únicos de este proveedor para el menú
+                estatus_unicos = resultado['STATUS'].dropna().unique().tolist()
+                estatus_unicos.insert(0, "Todos los estatus") # Opción por defecto
+                
+                # Mostramos el filtro
+                opcion_status = st.selectbox("🎛️ Filtrar resultados por Estatus:", estatus_unicos)
+                
+                # Aplicamos el filtro si el usuario selecciona uno específico
+                if opcion_status != "Todos los estatus":
+                    resultado = resultado[resultado['STATUS'] == opcion_status]
+
+                st.success(f"✅ Se encontraron {len(resultado)} registros para esta búsqueda.")
                 st.button("🔄 Realizar una nueva búsqueda", on_click=limpiar_busqueda)
                 st.write("")
                 
-                for index, datos in resultado.iterrows():
-                    
-                    po = datos['PO'] if pd.notna(datos['PO']) else "No registrado"
-                    supplier = datos['SUPPLIER'] if pd.notna(datos['SUPPLIER']) else "No registrado"
-                    productos = datos['PRODUCTOS'] if pd.notna(datos['PRODUCTOS']) else "No registrado"
-                    status = datos['STATUS'] if pd.notna(datos['STATUS']) else "Sin estatus"
-                    wr = datos['WR'] if pd.notna(datos['WR']) else "No registrado"
-                    notes = datos['NOTES'] if pd.notna(datos['NOTES']) else "Ninguna"
-
-                    if pd.notna(datos['ARRIBO']):
-                        try:
-                            arribo = pd.to_datetime(datos['ARRIBO']).strftime('%Y-%m-%d')
-                        except:
-                            arribo = str(datos['ARRIBO'])
-                    else:
-                        arribo = "No registrada"
-
-                    with st.container(border=True):
-                        st.subheader(f"📦 PO: {po}")
+                if not resultado.empty:
+                    for index, datos in resultado.iterrows():
                         
-                        col1, col2 = st.columns(2)
-                        
-                        with col1:
-                            st.markdown(cuadro_titulo("SUPPLIER"), unsafe_allow_html=True)
-                            st.write(supplier)
+                        po = datos['PO'] if pd.notna(datos['PO']) else "No registrado"
+                        supplier = datos['SUPPLIER'] if pd.notna(datos['SUPPLIER']) else "No registrado"
+                        productos = datos['PRODUCTOS'] if pd.notna(datos['PRODUCTOS']) else "No registrado"
+                        status = datos['STATUS'] if pd.notna(datos['STATUS']) else "Sin estatus"
+                        wr = datos['WR'] if pd.notna(datos['WR']) else "No registrado"
+                        notes = datos['NOTES'] if pd.notna(datos['NOTES']) else "Ninguna"
+
+                        if pd.notna(datos['ARRIBO']):
+                            try:
+                                arribo = pd.to_datetime(datos['ARRIBO']).strftime('%Y-%m-%d')
+                            except:
+                                arribo = str(datos['ARRIBO'])
+                        else:
+                            arribo = "No registrada"
+
+                        with st.container(border=True):
+                            st.subheader(f"📦 PO: {po}")
                             
-                            st.markdown(cuadro_titulo("PRODUCTOS"), unsafe_allow_html=True)
-                            st.write(productos)
+                            col1, col2 = st.columns(2)
                             
-                            st.markdown(cuadro_titulo("ARRIBO"), unsafe_allow_html=True)
-                            st.write(arribo)
-                            
-                        with col2:
-                            st.markdown(cuadro_titulo("STATUS"), unsafe_allow_html=True)
-                            st.success(f"**{status}**") 
-                            
-                            st.markdown(cuadro_titulo("WR"), unsafe_allow_html=True)
-                            st.write(wr)
-                            
-                            st.markdown(cuadro_titulo("NOTES"), unsafe_allow_html=True)
-                            st.info(notes)
+                            with col1:
+                                st.markdown(cuadro_titulo("SUPPLIER"), unsafe_allow_html=True)
+                                st.write(supplier)
+                                
+                                st.markdown(cuadro_titulo("PRODUCTOS"), unsafe_allow_html=True)
+                                st.write(productos)
+                                
+                                st.markdown(cuadro_titulo("ARRIBO"), unsafe_allow_html=True)
+                                st.write(arribo)
+                                
+                            with col2:
+                                st.markdown(cuadro_titulo("STATUS"), unsafe_allow_html=True)
+                                st.success(f"**{status}**") 
+                                
+                                st.markdown(cuadro_titulo("WR"), unsafe_allow_html=True)
+                                st.write(wr)
+                                
+                                st.markdown(cuadro_titulo("NOTES"), unsafe_allow_html=True)
+                                st.info(notes)
+                else:
+                    st.info("No hay órdenes con ese estatus específico para este proveedor.")
 
             else:
                 st.error("❌ No se encontraron órdenes para este proveedor.")
