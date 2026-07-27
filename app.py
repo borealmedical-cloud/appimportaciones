@@ -40,7 +40,7 @@ def cargar_datos():
 # 4. Diseño de la Pantalla de Login
 def mostrar_login():
     try:
-        st.image("LOGO_BOREAL_MEDICAL_HORIZONTAL.png", use_container_width=True)
+        st.image("https://www.equipomedico.com.ec/app_importaciones/LOGO_BOREAL_MEDICAL_HORIZONTAL.png", use_container_width=True)
     except FileNotFoundError:
         st.warning("⚠️ No se encontró la imagen 'LOGO_BOREAL_MEDICAL_HORIZONTAL.png'.")
     
