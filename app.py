@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuración de la página (Uso de emoji para evitar errores de icono en la nube)
+# 1. Configuración de la página
 st.set_page_config(page_title="Importaciones Boreal Medical", page_icon="🏢", layout="centered")
 
-# URL DIRECTA DEL LOGOTIPO EN TU SERVIDOR (Esto soluciona el error de MediaFileStorage)
+# URL DIRECTA DEL LOGOTIPO EN TU SERVIDOR
 url_logo = "https://www.equipomedico.com.ec/app_importaciones/LOGO_BOREAL_MEDICAL_HORIZONTAL.png"
 
 # 2. Variables de memoria
@@ -37,11 +37,13 @@ def cargar_datos():
     )
     return df
 
-# 4. Diseño de la Pantalla de Login
+# 4. Diseño de la Pantalla de Login (Logo 50% más pequeño)
 def mostrar_login():
     try:
-        # Llama a la imagen desde internet
-        st.image(url_logo, use_container_width=True)
+        # Usamos 3 columnas [1, 2, 1] para que el logo ocupe el centro y sea un 50% más pequeño
+        col_izq, col_centro, col_der = st.columns([1, 2, 1])
+        with col_centro:
+            st.image(url_logo, use_container_width=True)
     except Exception:
         st.warning("⚠️ No se pudo cargar el logotipo desde el servidor.")
     
@@ -96,15 +98,13 @@ def mostrar_aplicacion():
 
             if not resultado.empty:
                 
-                # --- NUEVO: FILTRO POR STATUS ---
-                # Extraemos los estatus únicos de este proveedor para el menú
+                # Extraemos los estatus únicos para el filtro
                 estatus_unicos = resultado['STATUS'].dropna().unique().tolist()
-                estatus_unicos.insert(0, "Todos los estatus") # Opción por defecto
+                estatus_unicos.insert(0, "Todos los estatus")
                 
-                # Mostramos el filtro
+                # Filtro selector por estatus
                 opcion_status = st.selectbox("🎛️ Filtrar resultados por Estatus:", estatus_unicos)
                 
-                # Aplicamos el filtro si el usuario selecciona uno específico
                 if opcion_status != "Todos los estatus":
                     resultado = resultado[resultado['STATUS'] == opcion_status]
 
