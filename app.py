@@ -12,7 +12,7 @@ if "autenticado" not in st.session_state:
     st.session_state["autenticado"] = False
 
 if "busqueda_proveedor" not in st.session_state:
-    st.session_state["busqueda_proveedor"] = ""
+    st.session_state["busqueda_proveedor"] = "" # Ahora guardará la selección vacía por defecto
 
 def limpiar_busqueda():
     st.session_state["busqueda_proveedor"] = ""
@@ -37,10 +37,9 @@ def cargar_datos():
     )
     return df
 
-# 4. Diseño de la Pantalla de Login (Logo 50% más pequeño)
+# 4. Diseño de la Pantalla de Login
 def mostrar_login():
     try:
-        # Usamos 3 columnas [1, 2, 1] para que el logo ocupe el centro y sea un 50% más pequeño
         col_izq, col_centro, col_der = st.columns([1, 2, 1])
         with col_centro:
             st.image(url_logo, use_container_width=True)
@@ -85,20 +84,31 @@ def mostrar_aplicacion():
     try:
         df = cargar_datos()
 
-        st.text_input("🏢 Ingrese el nombre del SUPPLIER (Proveedor):", 
-                      placeholder="Ej: Medtronic, Atlas...", 
+        # --- NUEVO: TEXTO PREDICTIVO (AUTOCOMPLETADO) ---
+        # 1. Extraemos los proveedores únicos de la base de datos
+        lista_proveedores = df['SUPPLIER'].dropna().unique().tolist()
+        # 2. Los ordenamos alfabéticamente para mayor orden
+        lista_proveedores.sort()
+        # 3. Añadimos un espacio en blanco al inicio para que no busque el primero por defecto
+        lista_proveedores.insert(0, "")
+
+        # Reemplazamos text_input por selectbox. 
+        # Streamlit permite escribir dentro de este selectbox para autocompletar.
+        st.selectbox("🏢 Escriba o seleccione el nombre del SUPPLIER (Proveedor):", 
+                      options=lista_proveedores,
                       key="busqueda_proveedor")
 
         termino = st.session_state["busqueda_proveedor"].strip()
 
-        if termino:
-            # Filtrar primero por proveedor
-            filtro_proveedor = df['SUPPLIER'].astype(str).str.contains(termino, case=False, na=False)
+        # Si el usuario seleccionó un proveedor (no está en blanco)
+        if termino != "":
+            # Filtramos los datos exactos de ese proveedor
+            filtro_proveedor = df['SUPPLIER'].astype(str).str.strip() == termino
             resultado = df[filtro_proveedor]
 
             if not resultado.empty:
                 
-                # Extraemos los estatus únicos para el filtro
+                # Extraemos los estatus únicos para el filtro secundario
                 estatus_unicos = resultado['STATUS'].dropna().unique().tolist()
                 estatus_unicos.insert(0, "Todos los estatus")
                 
@@ -109,7 +119,7 @@ def mostrar_aplicacion():
                     resultado = resultado[resultado['STATUS'] == opcion_status]
 
                 st.success(f"✅ Se encontraron {len(resultado)} registros para esta búsqueda.")
-                st.button("🔄 Realizar una nueva búsqueda", on_click=limpiar_busqueda)
+                st.button("🔄 Limpiar búsqueda", on_click=limpiar_busqueda)
                 st.write("")
                 
                 if not resultado.empty:
