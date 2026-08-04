@@ -12,7 +12,7 @@ if "autenticado" not in st.session_state:
     st.session_state["autenticado"] = False
 
 if "busqueda_proveedor" not in st.session_state:
-    st.session_state["busqueda_proveedor"] = "" # Ahora guardará la selección vacía por defecto
+    st.session_state["busqueda_proveedor"] = ""
 
 def limpiar_busqueda():
     st.session_state["busqueda_proveedor"] = ""
@@ -22,6 +22,31 @@ def cuadro_titulo(texto):
     <div style='background-color: lightgray; padding: 5px 10px; border-radius: 5px; 
                 font-weight: bold; color: black; margin-bottom: 5px;'>
         {texto}
+    </div>
+    """
+
+# --- NUEVA FUNCIÓN: COLORES DINÁMICOS PARA EL STATUS ---
+def formato_status_color(status_texto):
+    status_upper = str(status_texto).upper().strip()
+    
+    # Evaluación de palabras clave para definir el color
+    if "BODEGA" in status_upper:
+        bg_color = "#1E88E5" # Azul Boreal
+    elif "ENTREGADO" in status_upper or "FINALIZADO" in status_upper or "COMPLETADO" in status_upper:
+        bg_color = "#2E7D32" # Verde
+    elif "TRANSITO" in status_upper or "CAMINO" in status_upper:
+        bg_color = "#FB8C00" # Naranja
+    elif "ADUANA" in status_upper or "REVISION" in status_upper:
+        bg_color = "#D81B60" # Magenta/Rojo
+    elif "CANCELADO" in status_upper or "RECHAZADO" in status_upper:
+        bg_color = "#E53935" # Rojo intenso
+    else:
+        bg_color = "#757575" # Gris para otros estados
+        
+    return f"""
+    <div style='background-color: {bg_color}; color: white; padding: 8px 12px; 
+                border-radius: 6px; font-weight: bold; text-align: center; font-size: 14px;'>
+        {status_texto}
     </div>
     """
 
@@ -37,7 +62,7 @@ def cargar_datos():
     )
     return df
 
-# 4. Diseño de la Pantalla de Login
+# 4. Diseño de la Pantalla de Login (Logo 50% compacto y centrado)
 def mostrar_login():
     try:
         col_izq, col_centro, col_der = st.columns([1, 2, 1])
@@ -84,35 +109,27 @@ def mostrar_aplicacion():
     try:
         df = cargar_datos()
 
-        # --- NUEVO: TEXTO PREDICTIVO (AUTOCOMPLETADO) ---
-        # 1. Extraemos los proveedores únicos de la base de datos
+        # Búsqueda con autocompletado (texto predictivo)
         lista_proveedores = df['SUPPLIER'].dropna().unique().tolist()
-        # 2. Los ordenamos alfabéticamente para mayor orden
         lista_proveedores.sort()
-        # 3. Añadimos un espacio en blanco al inicio para que no busque el primero por defecto
         lista_proveedores.insert(0, "")
 
-        # Reemplazamos text_input por selectbox. 
-        # Streamlit permite escribir dentro de este selectbox para autocompletar.
         st.selectbox("🏢 Escriba o seleccione el nombre del SUPPLIER (Proveedor):", 
                       options=lista_proveedores,
                       key="busqueda_proveedor")
 
         termino = st.session_state["busqueda_proveedor"].strip()
 
-        # Si el usuario seleccionó un proveedor (no está en blanco)
         if termino != "":
-            # Filtramos los datos exactos de ese proveedor
             filtro_proveedor = df['SUPPLIER'].astype(str).str.strip() == termino
             resultado = df[filtro_proveedor]
 
             if not resultado.empty:
                 
-                # Extraemos los estatus únicos para el filtro secundario
+                # Filtro selector por estatus
                 estatus_unicos = resultado['STATUS'].dropna().unique().tolist()
                 estatus_unicos.insert(0, "Todos los estatus")
                 
-                # Filtro selector por estatus
                 opcion_status = st.selectbox("🎛️ Filtrar resultados por Estatus:", estatus_unicos)
                 
                 if opcion_status != "Todos los estatus":
@@ -157,7 +174,9 @@ def mostrar_aplicacion():
                                 
                             with col2:
                                 st.markdown(cuadro_titulo("STATUS"), unsafe_allow_html=True)
-                                st.success(f"**{status}**") 
+                                # Se aplica la tarjeta de color dinámico según el texto del estado
+                                st.markdown(formato_status_color(status), unsafe_allow_html=True) 
+                                st.write("") # Espacio decorativo
                                 
                                 st.markdown(cuadro_titulo("WR"), unsafe_allow_html=True)
                                 st.write(wr)
