@@ -2,7 +2,65 @@ import streamlit as st
 import pandas as pd
 
 # 1. Configuración de la página
-st.set_page_config(page_title="Importaciones Boreal Medical", page_icon="🏢", layout="wide")
+st.set_page_config(page_title="Importaciones Boreal Medical", page_icon="🏢", layout="centered")
+
+# Inyección de CSS para Responsividad y Diseño Compacto
+st.markdown("""
+    <style>
+    /* Limitar ancho máximo y reducir rellenos globales */
+    .block-container {
+        padding-top: 1.2rem !important;
+        padding-bottom: 2rem !important;
+        max-width: 850px !important;
+    }
+    
+    /* Ajuste de tipografías generales */
+    h1 {
+        font-size: 1.5rem !important;
+        font-weight: 700 !important;
+        margin-bottom: 0.5rem !important;
+        color: #1a202c;
+    }
+    h2, h3 {
+        font-size: 1.15rem !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Ajuste de campos de entrada y desplegables */
+    .stTextInput input, .stSelectbox div[data-baseweb="select"] {
+        font-size: 0.88rem !important;
+        border-radius: 6px !important;
+    }
+    
+    /* Estilizar botones */
+    .stButton button {
+        font-size: 0.88rem !important;
+        padding: 0.35rem 0.8rem !important;
+        border-radius: 6px !important;
+    }
+
+    /* Tarjetas de resultados elegantes y adaptables */
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        padding: 12px !important;
+        margin-bottom: 12px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+    
+    /* Ajuste de etiquetas de sección */
+    .badge-label {
+        background-color: #edf2f7;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+        color: #2d3748;
+        font-size: 0.78rem;
+        margin-bottom: 4px;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # URL DIRECTA DEL LOGOTIPO EN TU SERVIDOR
 url_logo = "https://www.equipomedico.com.ec/app_importaciones/LOGO_BOREAL_MEDICAL_HORIZONTAL.png"
@@ -21,12 +79,7 @@ def limpiar_busqueda():
     st.session_state["busqueda_fabrica"] = ""
 
 def cuadro_titulo(texto):
-    return f"""
-    <div style='background-color: lightgray; padding: 5px 10px; border-radius: 5px; 
-                font-weight: bold; color: black; margin-bottom: 5px; font-size: 13px;'>
-        {texto}
-    </div>
-    """
+    return f"<div class='badge-label'>{texto}</div>"
 
 def formato_status_color(status_texto):
     status_upper = str(status_texto).upper().strip()
@@ -40,18 +93,17 @@ def formato_status_color(status_texto):
     elif "ADUANA" in status_upper or "REVISION" in status_upper:
         bg_color = "#D81B60" # Magenta/Rojo
     elif "CANCELADO" in status_upper or "RECHAZADO" in status_upper:
-        bg_color = "#E53935" # Rojo intenso
+        bg_color = "#E53935" # Rojo
     else:
         bg_color = "#757575" # Gris
         
     return f"""
-    <div style='background-color: {bg_color}; color: white; padding: 8px 12px; 
-                border-radius: 6px; font-weight: bold; text-align: center; font-size: 14px;'>
+    <div style='background-color: {bg_color}; color: white; padding: 6px 10px; 
+                border-radius: 5px; font-weight: bold; text-align: center; font-size: 0.85rem;'>
         {status_texto}
     </div>
     """
 
-# Función auxiliar para limpiar y formatear fechas
 def formatear_fecha(valor):
     if pd.notna(valor) and str(valor).strip() != "":
         try:
@@ -64,62 +116,63 @@ def formatear_fecha(valor):
 def cargar_datos():
     url_excel = "https://docs.google.com/spreadsheets/d/1GDj0c3NtPLi2NAXhtMGflpJR0bNLfwzu/export?format=xlsx"
     
-    # Leemos la hoja 2026 y las letras exactas solicitadas
     df = pd.read_excel(
         url_excel, 
         sheet_name="2026", 
         usecols="B,E,F,G,H,K,N,Q,W,AC,AG",
         dtype=str
     )
-    
-    # Limpiamos los nombres de las columnas para evitar errores de tipeo y los pasamos a mayúsculas
     df.columns = df.columns.str.strip().str.upper()
     return df
 
-# 4. Diseño de la Pantalla de Login
+# 4. Pantalla de Login Compacta y Estilizada
 def mostrar_login():
-    try:
-        col_izq, col_centro, col_der = st.columns([1, 2, 1])
-        with col_centro:
-            st.image(url_logo, use_container_width=True)
-    except Exception:
-        st.warning("⚠️ No se pudo cargar el logotipo desde el servidor.")
+    # Usamos columnas para centrar la tarjeta de login en pantallas grandes
+    _, col_login, _ = st.columns([1, 2.2, 1])
     
-    st.markdown("---")
-    st.markdown("<h3 style='text-align: center;'>Acceso al Sistema de Rastreo</h3>", unsafe_allow_html=True)
-    st.write("") 
-
-    usuario = st.text_input("👤 Usuario:")
-    contrasena = st.text_input("🔑 Contraseña:", type="password") 
-    
-    usuarios_autorizados = {
-        "boreal": "admin2026",
-        "logistica": "boreal2026",
-        "compras": "boreal2026"
-    }
-    
-    if st.button("Ingresar", use_container_width=True):
-        usuario_clean = usuario.strip().lower()
-        if usuario_clean in usuarios_autorizados and contrasena == usuarios_autorizados[usuario_clean]:
-            st.session_state["autenticado"] = True
-            st.session_state["usuario_actual"] = usuario.strip().capitalize()
-            st.rerun() 
-        else:
-            st.error("❌ Usuario o contraseña incorrectos.")
+    with col_login:
+        with st.container(border=True):
+            try:
+                st.image(url_logo, use_container_width=True)
+            except Exception:
+                st.warning("⚠️ No se pudo cargar el logotipo.")
+            
+            st.markdown("<h3 style='text-align: center; margin-top: 10px; font-size: 1.1rem;'>Acceso al Sistema</h3>", unsafe_allow_html=True)
+            
+            usuario = st.text_input("👤 Usuario:")
+            contrasena = st.text_input("🔑 Contraseña:", type="password") 
+            
+            usuarios_autorizados = {
+                "boreal": "admin2026",
+                "logistica": "boreal2026",
+                "compras": "boreal2026"
+            }
+            
+            st.write("")
+            if st.button("Ingresar", use_container_width=True):
+                usuario_clean = usuario.strip().lower()
+                if usuario_clean in usuarios_autorizados and contrasena == usuarios_autorizados[usuario_clean]:
+                    st.session_state["autenticado"] = True
+                    st.session_state["usuario_actual"] = usuario.strip().capitalize()
+                    st.rerun() 
+                else:
+                    st.error("❌ Credenciales incorrectas.")
 
 # 5. Diseño de la Aplicación Principal
 def mostrar_aplicacion():
+    # Barra superior compacta
     col_saludo, col_salir = st.columns([7, 3])
     with col_saludo:
-        st.markdown(f"👤 **Bienvenido(a):** `{st.session_state['usuario_actual']}`")
+        st.markdown(f"👤 **Usuario:** `{st.session_state['usuario_actual']}`")
     with col_salir:
-        if st.button("🚪 Cerrar Sesión", use_container_width=True):
+        if st.button("🚪 Salir", use_container_width=True):
             st.session_state["autenticado"] = False
             st.session_state["usuario_actual"] = ""
             st.session_state["busqueda_fabrica"] = ""
             st.rerun()
 
-    col_logo, col_titulo = st.columns([1, 4])
+    # Encabezado con Logo y Título
+    col_logo, col_titulo = st.columns([1.2, 3.8])
     with col_logo:
         try:
             st.image(url_logo, use_container_width=True)
@@ -127,7 +180,7 @@ def mostrar_aplicacion():
             pass 
             
     with col_titulo:
-        st.title("IMPORTACIONES BOREAL MEDICAL")
+        st.markdown("<h1 style='margin-top: 5px;'>IMPORTACIONES BOREAL MEDICAL</h1>", unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown("### 🔍 Rastreo por Fábrica")
@@ -135,18 +188,16 @@ def mostrar_aplicacion():
     try:
         df = cargar_datos()
 
-        # Validación de seguridad
         if 'FABRICA' not in df.columns or 'ESTATUS' not in df.columns:
-            st.error("⚠️ Error: No encuentro las columnas 'FABRICA' o 'ESTATUS' en tu Excel. Asegúrate de que estén bien escritas en la primera fila.")
-            st.write("Columnas detectadas:", list(df.columns))
+            st.error("⚠️ No se encuentran las columnas 'FABRICA' o 'ESTATUS' en el Excel.")
             return
 
-        # Búsqueda predictiva basada en "FÁBRICA"
+        # Búsqueda predictiva
         lista_fabricas = df['FABRICA'].dropna().unique().tolist()
         lista_fabricas.sort()
         lista_fabricas.insert(0, "")
 
-        st.selectbox("🏭 Escriba o seleccione el nombre de la FÁBRICA:", 
+        st.selectbox("🏭 Escriba o seleccione la FÁBRICA:", 
                       options=lista_fabricas,
                       key="busqueda_fabrica")
 
@@ -162,19 +213,18 @@ def mostrar_aplicacion():
                 estatus_unicos = resultado['ESTATUS'].dropna().unique().tolist()
                 estatus_unicos.insert(0, "Todos los estatus")
                 
-                opcion_status = st.selectbox("🎛️ Filtrar resultados por Estatus:", estatus_unicos)
+                opcion_status = st.selectbox("🎛️ Filtrar por Estatus:", estatus_unicos)
                 
                 if opcion_status != "Todos los estatus":
                     resultado = resultado[resultado['ESTATUS'] == opcion_status]
 
-                st.success(f"✅ Se encontraron {len(resultado)} registros.")
+                st.success(f"✅ Se encontraron {len(resultado)} registro(s).")
                 st.button("🔄 Limpiar búsqueda", on_click=limpiar_busqueda)
                 st.write("")
                 
                 if not resultado.empty:
                     for index, datos in resultado.iterrows():
                         
-                        # Extracción segura de datos (11 columnas)
                         fabrica = datos.get('FABRICA', "No registrado")
                         requerido_por = datos.get('REQUERIDO POR', "No registrado")
                         cliente_stock = datos.get('CLIENTE/STOCK', "No registrado")
@@ -184,16 +234,15 @@ def mostrar_aplicacion():
                         tipo_embarque = datos.get('TIPO EMBARQUE', "No registrado")
                         bodega = datos.get('BODEGA', "No registrado")
                         
-                        # Fechas formateadas
                         fecha_despacho = formatear_fecha(datos.get('FECHA DESPACHO FABRICA'))
                         tentativo_bodegas = formatear_fecha(datos.get('TENTATIVO BODEGAS'))
                         ingreso_bodega = formatear_fecha(datos.get('FECHA INGRESO BODEGA'))
 
-                        # Distribución visual en 3 columnas para evitar amontonamiento
+                        # Contenedor por registro con distribución responsive (2 columnas de bloques)
                         with st.container(border=True):
-                            st.subheader(f"🏭 FÁBRICA: {fabrica}")
+                            st.markdown(f"<h3 style='color: #2b6cb0; margin-bottom: 10px;'>🏭 {fabrica}</h3>", unsafe_allow_html=True)
                             
-                            c1, c2, c3 = st.columns(3)
+                            c1, c2 = st.columns(2)
                             
                             with c1:
                                 st.markdown(cuadro_titulo("CLIENTE / STOCK"), unsafe_allow_html=True)
@@ -204,40 +253,36 @@ def mostrar_aplicacion():
                                 
                                 st.markdown(cuadro_titulo("REQUERIDO POR"), unsafe_allow_html=True)
                                 st.write(requerido_por)
+
+                                st.markdown(cuadro_titulo("DESPACHO FÁBRICA"), unsafe_allow_html=True)
+                                st.write(fecha_despacho)
+
+                                st.markdown(cuadro_titulo("TENTATIVO BODEGAS"), unsafe_allow_html=True)
+                                st.write(tentativo_bodegas)
                                 
                             with c2:
                                 st.markdown(cuadro_titulo("ESTATUS"), unsafe_allow_html=True)
                                 st.markdown(formato_status_color(estatus), unsafe_allow_html=True) 
                                 st.write("") 
                                 
-                                st.markdown(cuadro_titulo("TIPO DE EMBARQUE"), unsafe_allow_html=True)
-                                st.write(tipo_embarque)
+                                st.markdown(cuadro_titulo("TIPO EMBARQUE / BODEGA"), unsafe_allow_html=True)
+                                st.write(f"📦 {tipo_embarque} | 🏢 {bodega}")
 
-                                st.markdown(cuadro_titulo("BODEGA"), unsafe_allow_html=True)
-                                st.write(bodega)
-                                
-                            with c3:
-                                st.markdown(cuadro_titulo("DESPACHO FÁBRICA"), unsafe_allow_html=True)
-                                st.info(fecha_despacho)
-                                
-                                st.markdown(cuadro_titulo("TENTATIVO BODEGAS"), unsafe_allow_html=True)
-                                st.warning(tentativo_bodegas)
-                                
                                 st.markdown(cuadro_titulo("INGRESO BODEGA"), unsafe_allow_html=True)
-                                st.success(ingreso_bodega)
+                                st.write(ingreso_bodega)
                                 
-                            # Comentarios a lo ancho completo en la parte inferior
+                            # Comentarios a lo ancho completo
                             st.markdown(cuadro_titulo("COMENTARIOS"), unsafe_allow_html=True)
                             st.write(comentarios)
                 else:
-                    st.info("No hay órdenes con ese estatus específico para esta fábrica.")
+                    st.info("No hay órdenes con ese estatus específico.")
 
             else:
                 st.error("❌ No se encontraron órdenes para esta fábrica.")
                 st.button("🔄 Intentar nueva búsqueda", on_click=limpiar_busqueda)
 
     except Exception as e:
-        st.error(f"⚠️ Error al conectar con Google Sheets. Asegúrate de que los títulos de las columnas (ej. 'CLIENTE/STOCK') estén escritos exactamente igual en la primera fila de tu Excel. Error detallado: {e}")
+        st.error(f"⚠️ Error al conectar con Google Sheets. Error: {e}")
 
 # 6. Lógica de control
 if not st.session_state["autenticado"]:
