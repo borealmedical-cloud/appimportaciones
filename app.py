@@ -51,18 +51,22 @@ def formato_status_color(status_texto):
     </div>
     """
 
-# 3. Función para cargar la base de datos desde Google Sheets
+# 3. Función para cargar la base de datos
 def cargar_datos():
-    columnas_requeridas = ['PO', 'SUPPLIER', 'PRODUCTOS', 'STATUS', 'ARRIBO', 'WR', 'NOTES']
+    # Transformamos tu enlace para descargar en formato Excel directamente
+    url_excel = "https://docs.google.com/spreadsheets/d/1GDj0c3NtPLi2NAXhtMGflpJR0bNLfwzu/export?format=xlsx"
     
-    # --- AQUÍ ESTÁ TU NUEVO ENLACE ACTUALIZADO ---
-    url_google_sheets = "https://docs.google.com/spreadsheets/d/1L2tTsNhlzqZRx737l8vxAWpLHbH06sZa/export?format=csv"
-    
-    df = pd.read_csv(
-        url_google_sheets, 
-        usecols=columnas_requeridas,
+    # Leemos especificando la hoja "2026" y las letras exactas de tus columnas
+    df = pd.read_excel(
+        url_excel, 
+        sheet_name="2026", 
+        usecols="B,E,F,G,H,K,N,Q,W,AC,AG",
         dtype=str
     )
+    
+    # Limpiamos los nombres de las columnas (evita errores por espacios vacíos)
+    df.columns = df.columns.str.strip()
+    
     return df
 
 # 4. Diseño de la Pantalla de Login
@@ -129,7 +133,12 @@ def mostrar_aplicacion():
     try:
         df = cargar_datos()
 
-        # Búsqueda con autocompletado (texto predictivo)
+        # Filtro de seguridad (Evita que la app colapse si el Excel cambia de nombre a estas dos columnas vitales)
+        if 'SUPPLIER' not in df.columns or 'STATUS' not in df.columns:
+            st.error("⚠️ Error: No encuentro las columnas 'SUPPLIER' o 'STATUS' dentro de las letras que indicaste (B, E, F...). Verifica los títulos de tu Excel.")
+            return
+
+        # Búsqueda con autocompletado
         lista_proveedores = df['SUPPLIER'].dropna().unique().tolist()
         lista_proveedores.sort()
         lista_proveedores.insert(0, "")
@@ -162,18 +171,20 @@ def mostrar_aplicacion():
                 if not resultado.empty:
                     for index, datos in resultado.iterrows():
                         
-                        po = datos['PO'] if pd.notna(datos['PO']) else "No registrado"
-                        supplier = datos['SUPPLIER'] if pd.notna(datos['SUPPLIER']) else "No registrado"
-                        productos = datos['PRODUCTOS'] if pd.notna(datos['PRODUCTOS']) else "No registrado"
-                        status = datos['STATUS'] if pd.notna(datos['STATUS']) else "Sin estatus"
-                        wr = datos['WR'] if pd.notna(datos['WR']) else "No registrado"
-                        notes = datos['NOTES'] if pd.notna(datos['NOTES']) else "Ninguna"
+                        # Extraemos datos de forma segura (ignora columnas que falten)
+                        po = datos.get('PO', "No registrado") if pd.notna(datos.get('PO')) else "No registrado"
+                        supplier = datos.get('SUPPLIER', "No registrado") if pd.notna(datos.get('SUPPLIER')) else "No registrado"
+                        productos = datos.get('PRODUCTOS', "No registrado") if pd.notna(datos.get('PRODUCTOS')) else "No registrado"
+                        status = datos.get('STATUS', "Sin estatus") if pd.notna(datos.get('STATUS')) else "Sin estatus"
+                        wr = datos.get('WR', "No registrado") if pd.notna(datos.get('WR')) else "No registrado"
+                        notes = datos.get('NOTES', "Ninguna") if pd.notna(datos.get('NOTES')) else "Ninguna"
 
-                        if pd.notna(datos['ARRIBO']):
+                        arribo_val = datos.get('ARRIBO')
+                        if pd.notna(arribo_val):
                             try:
-                                arribo = pd.to_datetime(datos['ARRIBO']).strftime('%Y-%m-%d')
+                                arribo = pd.to_datetime(arribo_val).strftime('%Y-%m-%d')
                             except:
-                                arribo = str(datos['ARRIBO'])
+                                arribo = str(arribo_val)
                         else:
                             arribo = "No registrada"
 
@@ -210,7 +221,7 @@ def mostrar_aplicacion():
                 st.button("🔄 Intentar nueva búsqueda", on_click=limpiar_busqueda)
 
     except Exception as e:
-        st.error(f"⚠️ Error al conectar con Google Sheets. Asegúrate de que el documento esté configurado como público. Error: {e}")
+        st.error(f"⚠️ Error al conectar con Google Sheets. Asegúrate de que el documento esté configurado como público y que exista la hoja '2026'. Error: {e}")
 
 # 6. Lógica de control
 if not st.session_state["autenticado"]:
