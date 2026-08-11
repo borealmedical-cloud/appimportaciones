@@ -7,9 +7,12 @@ st.set_page_config(page_title="Importaciones Boreal Medical", page_icon="🏢", 
 # URL DIRECTA DEL LOGOTIPO EN TU SERVIDOR
 url_logo = "https://www.equipomedico.com.ec/app_importaciones/LOGO_BOREAL_MEDICAL_HORIZONTAL.png"
 
-# 2. Variables de memoria
+# 2. Variables de memoria (Sesión, Usuario y Búsqueda)
 if "autenticado" not in st.session_state:
     st.session_state["autenticado"] = False
+
+if "usuario_actual" not in st.session_state:
+    st.session_state["usuario_actual"] = ""
 
 if "busqueda_proveedor" not in st.session_state:
     st.session_state["busqueda_proveedor"] = ""
@@ -25,11 +28,9 @@ def cuadro_titulo(texto):
     </div>
     """
 
-# --- NUEVA FUNCIÓN: COLORES DINÁMICOS PARA EL STATUS ---
 def formato_status_color(status_texto):
     status_upper = str(status_texto).upper().strip()
     
-    # Evaluación de palabras clave para definir el color
     if "BODEGA" in status_upper:
         bg_color = "#1E88E5" # Azul Boreal
     elif "ENTREGADO" in status_upper or "FINALIZADO" in status_upper or "COMPLETADO" in status_upper:
@@ -41,7 +42,7 @@ def formato_status_color(status_texto):
     elif "CANCELADO" in status_upper or "RECHAZADO" in status_upper:
         bg_color = "#E53935" # Rojo intenso
     else:
-        bg_color = "#757575" # Gris para otros estados
+        bg_color = "#757575" # Gris
         
     return f"""
     <div style='background-color: {bg_color}; color: white; padding: 8px 12px; 
@@ -62,7 +63,7 @@ def cargar_datos():
     )
     return df
 
-# 4. Diseño de la Pantalla de Login (Logo 50% compacto y centrado)
+# 4. Diseño de la Pantalla de Login
 def mostrar_login():
     try:
         col_izq, col_centro, col_der = st.columns([1, 2, 1])
@@ -78,21 +79,39 @@ def mostrar_login():
     usuario = st.text_input("👤 Usuario:")
     contrasena = st.text_input("🔑 Contraseña:", type="password") 
     
+    # --- DICCIONARIO DE USUARIOS AUTORIZADOS ---
+    # Puedes agregar más usuarios y contraseñas aquí si lo deseas
+    usuarios_autorizados = {
+        "boreal": "admin2026",
+        "logistica": "boreal2026",
+        "compras": "boreal2026"
+    }
+    
     if st.button("Ingresar", use_container_width=True):
-        if usuario == "boreal" and contrasena == "admin2026":
+        usuario_clean = usuario.strip().lower()
+        if usuario_clean in usuarios_autorizados and contrasena == usuarios_autorizados[usuario_clean]:
             st.session_state["autenticado"] = True
+            st.session_state["usuario_actual"] = usuario.strip().capitalize() # Guardamos el nombre para mostrarlo
             st.rerun() 
         else:
             st.error("❌ Usuario o contraseña incorrectos.")
 
 # 5. Diseño de la Aplicación Principal
 def mostrar_aplicacion():
-    col_espacio, col_salir = st.columns([8, 2])
+    # Barra superior con Saludo de Usuario y Botón de Salir
+    col_saludo, col_salir = st.columns([7, 3])
+    
+    with col_saludo:
+        st.markdown(f"👤 **Bienvenido(a):** `{st.session_state['usuario_actual']}`")
+        
     with col_salir:
-        if st.button("Cerrar Sesión"):
+        if st.button("🚪 Cerrar Sesión", use_container_width=True):
             st.session_state["autenticado"] = False
+            st.session_state["usuario_actual"] = ""
+            st.session_state["busqueda_proveedor"] = ""
             st.rerun()
 
+    # Encabezado principal
     col_logo, col_titulo = st.columns([1, 4])
     with col_logo:
         try:
@@ -174,9 +193,8 @@ def mostrar_aplicacion():
                                 
                             with col2:
                                 st.markdown(cuadro_titulo("STATUS"), unsafe_allow_html=True)
-                                # Se aplica la tarjeta de color dinámico según el texto del estado
                                 st.markdown(formato_status_color(status), unsafe_allow_html=True) 
-                                st.write("") # Espacio decorativo
+                                st.write("") 
                                 
                                 st.markdown(cuadro_titulo("WR"), unsafe_allow_html=True)
                                 st.write(wr)
