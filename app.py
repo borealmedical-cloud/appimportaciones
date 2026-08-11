@@ -54,7 +54,9 @@ def formato_status_color(status_texto):
 # 3. Función para cargar la base de datos desde Google Sheets
 def cargar_datos():
     columnas_requeridas = ['PO', 'SUPPLIER', 'PRODUCTOS', 'STATUS', 'ARRIBO', 'WR', 'NOTES']
-    url_google_sheets = "https://docs.google.com/spreadsheets/d/1L2tTsNhlzqZRx737l8vxAWpLHbH06sZa/edit?usp=sharing&ouid=107170398108370076758&rtpof=true&sd=true"
+    
+    # --- AQUÍ ESTÁ TU NUEVO ENLACE ACTUALIZADO ---
+    url_google_sheets = "https://docs.google.com/spreadsheets/d/1L2tTsNhlzqZRx737l8vxAWpLHbH06sZa/export?format=csv"
     
     df = pd.read_csv(
         url_google_sheets, 
@@ -79,8 +81,7 @@ def mostrar_login():
     usuario = st.text_input("👤 Usuario:")
     contrasena = st.text_input("🔑 Contraseña:", type="password") 
     
-    # --- DICCIONARIO DE USUARIOS AUTORIZADOS ---
-    # Puedes agregar más usuarios y contraseñas aquí si lo deseas
+    # DICCIONARIO DE USUARIOS AUTORIZADOS
     usuarios_autorizados = {
         "boreal": "admin2026",
         "logistica": "boreal2026",
@@ -91,7 +92,7 @@ def mostrar_login():
         usuario_clean = usuario.strip().lower()
         if usuario_clean in usuarios_autorizados and contrasena == usuarios_autorizados[usuario_clean]:
             st.session_state["autenticado"] = True
-            st.session_state["usuario_actual"] = usuario.strip().capitalize() # Guardamos el nombre para mostrarlo
+            st.session_state["usuario_actual"] = usuario.strip().capitalize()
             st.rerun() 
         else:
             st.error("❌ Usuario o contraseña incorrectos.")
