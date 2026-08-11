@@ -54,7 +54,7 @@ def formato_status_color(status_texto):
 # 3. Función para cargar la base de datos desde Google Sheets
 def cargar_datos():
     columnas_requeridas = ['PO', 'SUPPLIER', 'PRODUCTOS', 'STATUS', 'ARRIBO', 'WR', 'NOTES']
-    url_google_sheets = "https://docs.google.com/spreadsheets/d/1sTUGAEUiVt-J1UIxjlMOSQ6PEbPh_Phff3Q4Vidv8zs/export?format=csv&gid=1010252446"
+    url_google_sheets = "https://docs.google.com/spreadsheets/d/1L2tTsNhlzqZRx737l8vxAWpLHbH06sZa/edit?usp=sharing&ouid=107170398108370076758&rtpof=true&sd=true"
     
     df = pd.read_csv(
         url_google_sheets, 
