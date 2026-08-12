@@ -1,18 +1,36 @@
 import streamlit as st
 import pandas as pd
+import streamlit.components.v1 as components
 
-# 1. URLs de las imágenes corporativas en tu servidor
+# 1. URLs de las imágenes
 url_logo_horizontal = "https://www.equipomedico.com.ec/app_importaciones/LOGO_BOREAL_MEDICAL_HORIZONTAL.png"
 url_icono_cuadrado = "https://www.equipomedico.com.ec/app_importaciones/ISOTIPO_BOREAL_MEDICAL.png"
 
-# 2. Configuración de la página (Configura el isotipo como ícono de la app/celular)
+# 2. Configuración general
 st.set_page_config(
     page_title="Importaciones Boreal Medical", 
     page_icon=url_icono_cuadrado, 
     layout="centered"
 )
-# --- AÑADE ESTA LÍNEA AQUÍ PARA IPHONE / IOS ---
-st.markdown(f'<link rel="apple-touch-icon" href="{url_icono_cuadrado}">', unsafe_allow_html=True)
+
+# --- TRUCO AVANZADO PARA FORZAR EL ÍCONO EN IPHONE ---
+components.html(f"""
+    <script>
+        // Buscamos la 'cabeza' de la página principal
+        const doc = window.parent.document;
+        
+        // Creamos la etiqueta estricta de Apple
+        let link = doc.querySelector("link[rel~='apple-touch-icon']");
+        if (!link) {{
+            link = doc.createElement('link');
+            link.rel = 'apple-touch-icon';
+            doc.head.appendChild(link);
+        }}
+        // Le inyectamos tu imagen
+        link.href = '{url_icono_cuadrado}';
+    </script>
+""", height=0, width=0)
+# -----------------------------------------------------
 
 # Inyección de CSS para Responsividad y Diseño Compacto
 st.markdown("""
