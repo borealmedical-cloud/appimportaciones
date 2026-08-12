@@ -1,35 +1,16 @@
 import streamlit as st
 import pandas as pd
-import streamlit.components.v1 as components
+from PIL import Image  # <-- AÑADE ESTA LIBRERÍA
 
-# 1. URLs de las imágenes
-url_logo_horizontal = "https://www.equipomedico.com.ec/app_importaciones/LOGO_BOREAL_MEDICAL_HORIZONTAL.png"
-url_icono_cuadrado = "https://www.equipomedico.com.ec/app_importaciones/ISOTIPO_BOREAL_MEDICAL.png"
+# 1. Cargamos el archivo físico desde la misma carpeta
+icono_boreal = Image.open("ISOTIPO_BOREAL_MEDICAL.png")
 
-# 2. Configuración general
+# 2. Inyectamos la imagen de forma nativa
 st.set_page_config(
     page_title="Importaciones Boreal Medical", 
-    page_icon=url_icono_cuadrado, 
+    page_icon=icono_boreal,  # <-- Usamos la variable de la imagen, no una URL
     layout="centered"
 )
-
-# --- TRUCO AVANZADO PARA FORZAR EL ÍCONO EN IPHONE ---
-components.html(f"""
-    <script>
-        // Buscamos la 'cabeza' de la página principal
-        const doc = window.parent.document;
-        
-        // Creamos la etiqueta estricta de Apple
-        let link = doc.querySelector("link[rel~='apple-touch-icon']");
-        if (!link) {{
-            link = doc.createElement('link');
-            link.rel = 'apple-touch-icon';
-            doc.head.appendChild(link);
-        }}
-        // Le inyectamos tu imagen
-        link.href = '{url_icono_cuadrado}';
-    </script>
-""", height=0, width=0)
 # -----------------------------------------------------
 
 # Inyección de CSS para Responsividad y Diseño Compacto
