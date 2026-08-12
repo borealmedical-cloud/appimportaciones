@@ -1,35 +1,29 @@
 import streamlit as st
 import pandas as pd
-from PIL import Image  # <-- AÑADE ESTA LIBRERÍA
+from PIL import Image
+import os  # <-- Añadimos esta librería nativa para leer rutas
 
-# 1. URLs de las imágenes
-url_logo_horizontal = "https://www.equipomedico.com.ec/app_importaciones/LOGO_BOREAL_MEDICAL_HORIZONTAL.png"
-url_icono_cuadrado = "https://www.equipomedico.com.ec/app_importaciones/ISOTIPO_BOREAL_MEDICAL.png"
+# Definimos el nombre exacto de la imagen
+ruta_icono = "ISOTIPO_BOREAL_MEDICAL.png"
 
-# 2. Configuración general
-st.set_page_config(
-    page_title="Importaciones Boreal Medical", 
-    page_icon=url_icono_cuadrado, 
-    layout="centered"
-)
-
-# --- TRUCO AVANZADO PARA FORZAR EL ÍCONO EN IPHONE ---
-components.html(f"""
-    <script>
-        // Buscamos la 'cabeza' de la página principal
-        const doc = window.parent.document;
-        
-        // Creamos la etiqueta estricta de Apple
-        let link = doc.querySelector("link[rel~='apple-touch-icon']");
-        if (!link) {{
-            link = doc.createElement('link');
-            link.rel = 'apple-touch-icon';
-            doc.head.appendChild(link);
-        }}
-        // Le inyectamos tu imagen
-        link.href = '{url_icono_cuadrado}';
-    </script>
-""", height=0, width=0)
+# Verificamos si el archivo existe en el servidor
+if os.path.exists(ruta_icono):
+    icono_boreal = Image.open(ruta_icono)
+    st.set_page_config(
+        page_title="Importaciones Boreal Medical", 
+        page_icon=icono_boreal, 
+        layout="centered"
+    )
+else:
+    # Si la imagen falla por alguna razón, la app sigue funcionando 
+    # y usa un emoji de caja como ícono por defecto
+    st.set_page_config(
+        page_title="Importaciones Boreal Medical", 
+        page_icon="📦", 
+        layout="centered"
+    )
+    # Mostramos una pequeña advertencia en la app para que te des cuenta
+    st.warning("⚠️ Modo desarrollador: No se encontró el archivo del isotipo en el servidor.")
 # -----------------------------------------------------
 
 
