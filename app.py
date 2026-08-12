@@ -1,31 +1,16 @@
 import streamlit as st
 import pandas as pd
-from PIL import Image
-import os  # <-- Añadimos esta librería nativa para leer rutas
 
-# Definimos el nombre exacto de la imagen
-ruta_icono = "ISOTIPO_BOREAL_MEDICAL.png"
+# 1. URLs de las imágenes corporativas en tu servidor
+url_logo_horizontal = "https://www.equipomedico.com.ec/app_importaciones/LOGO_BOREAL_MEDICAL_HORIZONTAL.png"
+url_icono_cuadrado = "https://www.equipomedico.com.ec/app_importaciones/ISOTIPO_BOREAL_MEDICAL.png"
 
-# Verificamos si el archivo existe en el servidor
-if os.path.exists(ruta_icono):
-    icono_boreal = Image.open(ruta_icono)
-    st.set_page_config(
-        page_title="Importaciones Boreal Medical", 
-        page_icon=icono_boreal, 
-        layout="centered"
-    )
-else:
-    # Si la imagen falla por alguna razón, la app sigue funcionando 
-    # y usa un emoji de caja como ícono por defecto
-    st.set_page_config(
-        page_title="Importaciones Boreal Medical", 
-        page_icon="📦", 
-        layout="centered"
-    )
-    # Mostramos una pequeña advertencia en la app para que te des cuenta
-    st.warning("⚠️ Modo desarrollador: No se encontró el archivo del isotipo en el servidor.")
-# -----------------------------------------------------
-
+# 2. Configuración de la página (Configura el isotipo como ícono de la app/celular)
+st.set_page_config(
+    page_title="Importaciones Boreal Medical", 
+    page_icon=url_icono_cuadrado, 
+    layout="centered"
+)
 
 # Inyección de CSS para Responsividad y Diseño Compacto
 st.markdown("""
