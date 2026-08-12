@@ -11,6 +11,8 @@ st.set_page_config(
     page_icon=url_icono_cuadrado, 
     layout="centered"
 )
+# --- AÑADE ESTA LÍNEA AQUÍ PARA IPHONE / IOS ---
+st.markdown(f'<link rel="apple-touch-icon" href="{url_icono_cuadrado}">', unsafe_allow_html=True)
 
 # Inyección de CSS para Responsividad y Diseño Compacto
 st.markdown("""
