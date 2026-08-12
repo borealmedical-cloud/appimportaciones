@@ -32,13 +32,6 @@ components.html(f"""
 """, height=0, width=0)
 # -----------------------------------------------------
 
-# 2. Inyectamos la imagen de forma nativa
-st.set_page_config(
-    page_title="Importaciones Boreal Medical", 
-    page_icon=icono_boreal,  # <-- Usamos la variable de la imagen, no una URL
-    layout="centered"
-)
-# -----------------------------------------------------
 
 # Inyección de CSS para Responsividad y Diseño Compacto
 st.markdown("""
